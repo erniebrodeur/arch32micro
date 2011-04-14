@@ -2,6 +2,12 @@ arch32micro
 ===========
 This repo is for any custom scripts needed to boot Arch properly inside Amazon EC2.
 
+
+**WARNING**
+
+These scripts are NOT intended to be run anywhere EXCEPT INSIDE AN AMAZON INSTANCE.  I lay this out clearly because I will not feel bad when you use this on a non-ec2 system.
+I may be willing to help you fix it, but you shouldn't have done it.
+
 At this time, each script serves a specific, unique purpose.
 
 ec2-inject-keys
