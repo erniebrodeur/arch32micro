@@ -19,9 +19,10 @@ I have not decided exactly how I want this script to work, but the idea is for i
 
 I am honestly unsure how this entire mechanisim works at this time.
 
-ec2d
-----
+ec2.rc
+------
 This is a script designed for /etc/rc.d to be called on each boot.
+It should be renamed in PKGBUILD.
 
 * It will check for the presence of a firstrun file, so that only events happen once per instance.
 * It will respond to userdata to push the userdata script (whatever that is)

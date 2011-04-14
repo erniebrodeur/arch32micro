@@ -1,6 +1,8 @@
 #!/bin/sh
+# this is a skeleton of this file only, obviously we need tons of error checking and other such stuff.
+# but if you understand what this is doing, it does inject the keys.
 
-mkdir -o /root/.ssh
+mkdir -p /root/.ssh
 # this works because each instance is provided a RESTful server for meta data.  This is secure becasue
 # it is only broadcast to the specific instance it provides information for.
 curl -s http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key > /root/.ssh/authorized_keys
