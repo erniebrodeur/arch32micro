@@ -1,0 +1,7 @@
+#!/bin/sh
+
+mkdir -o /root/.ssh
+# this works because each instance is provided a RESTful server for meta data.  This is secure becasue
+# it is only broadcast to the specific instance it provides information for.
+curl -s http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key > /root/.ssh/authorized_keys
+chmod 0400 /root/.ssh/authorized_keys
