@@ -1,0 +1,81 @@
+#!/bin/sh
+# I really should do this in py or rb, and will before I go to far.  This is just a skeleton.
+# This file used https://github.com/yejun/ec2build as a reference, but since it has different
+# goals in mind, it is more of a guide then it is copied and extended.
+# This property is covered under the GPL or any other permissive license you feel like.
+
+
+### Tweakables
+# everything you want to customize is in this section.
+PACKS_BASE="pcre glib2 module-init-tools libgpg libgcrypt popt perl openssl kbd linux-firmware mkinitcpio-busybox  gen-init-cpio  which  mkinitcpio  less licenses logrotate texinfo groff man-db man-pages nano expat libarchive libfetch pacman pacman libnl procps psmisc tcp_wrappers tar vi wget"
+
+# These are extra base packs, the idea being don't edit PACKS_MAIN unless you absolutely have too.
+# instead just uncomment/tweak one of these and the string is cat'ed together during install.
+
+#PACKS_VIM
+#PACKS_EMACS
+
+# these are packs from the AUR that should be installed by default.  They are not compiled
+# in this script, so they must be .xz files.
+# DO NOT INCLUDE THE KERNEL!  we use a special handler to make sure it only gets installed
+# once and we use the one we want.
+AURPACKS=""
+
+# our kernel, from the AUR.
+KERNELPACK="kernel26-ec2"
+
+# DO NOT EDIT BELOW HERE.
+# Well, you can, but you should know what you are doing.
+
+### each step is broken up, to try to make the logic more contained.
+
+# setup env
+WORKINGDIR="~/tmp/newroot"
+
+mkdir -p $WORKINGDIR
+
+# this is our 100m boot disk.
+dd if=/dev/zero of=boot.img bs=1M count=100
+# make our root, for now a 1.9g disk.
+dd if=/dev/zero of=root.img bs=1M count=1900
+
+
+# create filesystem, until I'm done testing this will be ext3.
+mkfs.ext3 -F boot.img
+mkfs.ext3 -F root.img
+
+# setup new root.
+mount -o loop root.img ./newroot
+mkdir -p ./newroot/boot
+mount -o loop boot.img ./newroot/boot
+
+
+# concat pack lists from above together, later.
+ALLPACKS=$PACKS_BASE
+
+# build the basic system
+linux32 mkarchroot -f -C ./pacman.conf newroot "filesystem pacman sed coreutils ca-certificates groff less which procps logrotate syslog-ng net-tools initscripts psmisc nano vi iputils tar sudo mailx openssh wget curl screen bash-completion zsh cpio base-devel devtools lesspipe iproute2 htop bash-completion lesspipe"
+
+# setup the custom AUR stuff
+mkdir -p newroot/root/AUR
+cp -Rv AUR newroot/root/
+
+# enter root, thanks Allen!
+linux32 mkarchroot -r "bash" newroot
+pacman -U /root/AUR/*.xz
+
+# run pvgrup? (does this work on amazon? is it needed?)
+
+# secure sshd
+
+# setup our fstab with uuid's
+
+# setup our resolv.conf
+
+# setup sudoers
+
+# flag for first boot
+
+# wrap up env
+
+# clean up temp files

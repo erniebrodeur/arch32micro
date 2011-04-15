@@ -35,6 +35,14 @@ It should be renamed in PKGBUILD.
 * It will respond to start for tasks to be called each time (if needed).
 * It will respond to clean, which will purge any key's injected (safely, if you customize it will not).
 
+ami-builder
+-----------
+This script should do generate the AMI bundle, but not push it.
+
+ami-push
+--------
+Likewise, this should push the resulting script.
+
 PKGBUILD
 --------
 How/where ever the files finally live, a PKGBUILD is only suiting since this is an ArchLinux designed system.
