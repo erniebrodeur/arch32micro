@@ -37,7 +37,13 @@ It should be renamed in PKGBUILD.
 
 ami-builder
 -----------
-This script should do generate the AMI bundle, but not push it.
+This script requires root to be run due to various mount requirements.  It currently works but the image is untested.
+
+It makes two images:
+
+root.img: 1.9g /
+boot.img: 100m /boot
+
 
 ami-push
 --------

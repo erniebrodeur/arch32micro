@@ -54,9 +54,9 @@ mkfs.ext3 -F boot.img
 mkfs.ext3 -F root.img
 
 # setup new root.  Don't try gid/uid, apparently loop devices just keep file perms.
-sudo mount -o loop root.img ./newroot
+mount -o loop root.img ./newroot
 mkdir -p ./newroot/boot
-sudo mount -o loop boot.img ./newroot/boot
+mount -o loop boot.img ./newroot/boot
 
 
 # concat pack lists from above together, later.
@@ -64,17 +64,18 @@ ALLPACKS=$PACKS_BASE
 
 ### Start building arch
 # build the basic system
-#sudo linux32 mkarchroot -f -C ./pacman.conf newroot pcre glib2 module-init-tools libgcrypt popt perl openssl kbd linux-firmware mkinitcpio-busybox gen-init-cpio which mkinitcpio less licenses logrotate texinfo groff man-db man-pages nano expat libarchive libfetch pacman pacman libnl procps psmisc tcp_wrappers tar vi wget
+#linux32 mkarchroot -f -C ./pacman.conf newroot pcre glib2 module-init-tools libgcrypt popt perl openssl kbd linux-firmware mkinitcpio-busybox gen-init-cpio which mkinitcpio less licenses logrotate texinfo groff man-db man-pages nano expat libarchive libfetch pacman pacman libnl procps psmisc tcp_wrappers tar vi wget
 
-sudo linux32 mkarchroot -f -C ./pacman.conf newroot $ALLPACKS
+linux32 mkarchroot -f -C ./pacman.conf newroot $ALLPACKS
 
 # setup the custom AUR stuff
-sudo mkdir -p ./newroot/root/AUR
-sudo cp -Rv AUR ./newroot/root/
+mkdir -p ./newroot/root/AUR
+cp -Rv AUR ./newroot/root/
 
 # -r "bash" starts up a nice chroot env with all our mounts done. thanks Allan!
 # I need to put an arch catch here, since this may implode on 32, haven't tested.
-sudo linux32 mkarchroot -r "pacman -U /root/AUR/\*.xz" newroot
+# TODO: make this glob, or regex, or something.
+linux32 mkarchroot -r "pacman --noconfirm -U /root/AUR/kernel26-ec2-2.6.38-1-i686.pkg.tar.xz /root/AUR/kernel26-ec2-headers-2.6.38-1-i686.pkg.tar.xz" newroot
 
 ### Boot loader
 # so my current theory is that I don't put a boot loader at all. Instead, I generate a menu-list
@@ -95,10 +96,11 @@ EOF
 sed -e 's/#PasswordAuthentication yes/PasswordAuthentication no/' -i ./newroot/etc/ssh/sshd_config
 sed -e 's/#UseDNS yes/UseDNS no/' -i ./newroot/etc/ssh/sshd_config
 
-# setup our fstab with uuid's
+# setup our fstab with uuid's.
+# TODO: make it work with the correct loop's, not just the first two.
 cat << EOF > ./newroot/etc/fstab
-$(blkid -c /dev/null -s UUID -o export /dev/xvdm2) /     auto    defaults,relatime 0 1
-$(blkid -c /dev/null -s UUID -o export /dev/xvdm1) /boot auto    defaults,noauto,relatime 0 0
+$(blkid -c /dev/null -s UUID -o export /dev/loop0) /     auto    defaults,relatime 0 1
+$(blkid -c /dev/null -s UUID -o export /dev/loop1) /boot auto    defaults,noauto,relatime 0 0
 none      /proc proc    nodev,noexec,nosuid 0 0
 none /dev/pts devpts defaults 0 0
 none /dev/shm tmpfs nodev,nosuid 0 0
@@ -151,8 +153,9 @@ touch ./newroot/root/firstboot
 
 # wrap up env
 
+echo "Cleaning up."
 
-sudo rm newroot.lock
-sudo umount newroot/boot
-sudo umount newroot
+rm newroot.lock
+umount newroot/boot
+umount newroot
 
