@@ -49,9 +49,9 @@ dd if=/dev/zero of=boot.img bs=1M count=100
 dd if=/dev/zero of=root.img bs=1M count=1900
 
 
-# create filesystem, until I'm done testing this will be ext3.
-mkfs.ext3 -F boot.img
-mkfs.ext3 -F root.img
+# create filesystems - boot is ext2, while root is ext4
+mkfs.ext2 -F boot.img
+mkfs.ext4 -F root.img
 
 # setup new root.  Don't try gid/uid, apparently loop devices just keep file perms.
 mount -o loop root.img ./newroot
