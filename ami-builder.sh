@@ -49,9 +49,9 @@ dd if=/dev/zero of=boot.img bs=1M count=100
 dd if=/dev/zero of=root.img bs=1M count=1900
 
 
-# create filesystem, until I'm done testing this will be ext3.
-mkfs.ext3 -F boot.img
-mkfs.ext3 -F root.img
+# create filesystems - boot is ext2, while root is ext4
+mkfs.ext2 -F boot.img
+mkfs.ext4 -F root.img
 
 # setup new root.  Don't try gid/uid, apparently loop devices just keep file perms.
 mount -o loop root.img ./newroot
@@ -69,13 +69,13 @@ ALLPACKS=$PACKS_BASE
 linux32 mkarchroot -f -C ./pacman.conf newroot $ALLPACKS
 
 # setup the custom AUR stuff
-mkdir -p ./newroot/root/AUR
-cp -Rv AUR ./newroot/root/
+mkdir -p ./newroot/opt/AUR
+cp -Rv AUR ./newroot/opt/
 
 # -r "bash" starts up a nice chroot env with all our mounts done. thanks Allan!
 # I need to put an arch catch here, since this may implode on 32, haven't tested.
 # TODO: make this glob, or regex, or something.
-linux32 mkarchroot -r "pacman --noconfirm -U /root/AUR/kernel26-ec2-2.6.38-1-i686.pkg.tar.xz /root/AUR/kernel26-ec2-headers-2.6.38-1-i686.pkg.tar.xz" newroot
+linux32 mkarchroot -r "pacman --noconfirm -U /opt/AUR/kernel26-ec2-2.6.38-1-i686.pkg.tar.xz /opt/AUR/kernel26-ec2-headers-2.6.38-1-i686.pkg.tar.xz" newroot
 
 ### Boot loader
 # so my current theory is that I don't put a boot loader at all. Instead, I generate a menu-list

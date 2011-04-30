@@ -1,5 +1,10 @@
-*.log
-*~
-.idea/*
+AUR/
 pkg/
 src/
+*.log
+*~
+
+.*
+!.gitignore
+!.gitmodules
+
