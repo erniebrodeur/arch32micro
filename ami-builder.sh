@@ -92,6 +92,9 @@ title  Arch Linux
 EOF
 
 ### Modified Files.
+# fix mkinitcpio
+cp ./mkinitcpio.conf ./newroot/etc/mkinitcpio.conf
+
 # secure sshd
 sed -e 's/#PasswordAuthentication yes/PasswordAuthentication no/' -i ./newroot/etc/ssh/sshd_config
 sed -e 's/#UseDNS yes/UseDNS no/' -i ./newroot/etc/ssh/sshd_config
