@@ -17,6 +17,9 @@
 ### Tweakables
 # everything you want to customize is in this section.
 PACKS_BASE="pcre glib2 module-init-tools libgcrypt popt perl openssl kbd linux-firmware mkinitcpio-busybox  gen-init-cpio  which  mkinitcpio  less licenses logrotate texinfo groff man-db man-pages nano expat libarchive libfetch pacman pacman libnl procps psmisc tcp_wrappers tar vi wget openssh sudo"
+ROOTDEV=/dev/xvdm
+ROOTDEV1=/dev/xvdm1
+ROOTDEV2=/dev/xvdm2
 
 # These are extra base packs, the idea being don't edit PACKS_MAIN unless you absolutely have too.
 # instead just uncomment/tweak one of these and the string is cat'ed together during install.
@@ -43,21 +46,29 @@ WORKINGDIR="./newroot"
 mkdir -p $WORKINGDIR
 
 
-# this is our 100m boot disk.
-dd if=/dev/zero of=boot.img bs=1M count=100
-# make our root, for now a 1.9g disk.
-dd if=/dev/zero of=root.img bs=1M count=1900
+# build our root device
+#dd if=/dev/zero of=$ROOTDEV bs=1M count=2000
+
+fdisk $ROOTDEV <<EOF
+n
+p
 
 
-# create filesystems - boot is ext2, while root is ext4
-mkfs.ext2 -F boot.img
-mkfs.ext4 -F root.img
++100M
+n
+p
 
-# setup new root.  Don't try gid/uid, apparently loop devices just keep file perms.
-mount -o loop root.img ./newroot
+
+
+w
+EOF
+mkfs.ext2 $ROOTDEV1
+mkfs.ext4 $ROOTDEV2
+
+# setup new root.
+mount $ROOTDEV2 ./newroot
 mkdir -p ./newroot/boot
-mount -o loop boot.img ./newroot/boot
-
+mount $ROOTDEV1 ./newroot/boot
 
 # concat pack lists from above together, later.
 ALLPACKS=$PACKS_BASE
@@ -84,16 +95,17 @@ linux32 mkarchroot -r "pacman --noconfirm -U /opt/AUR/kernel26-ec2-2.6.38-1-i686
 mkdir -p ./newroot/boot/grub
 cat << EOF > ./newroot/boot/grub/menu.lst
 default 0
-timeout 1
+timeout 4
+hiddenmenu
 
 title  Arch Linux
-	root   (hd0,0)
-	kernel /vmlinuz26-ec2.img root=/dev/xvda2 console=hvc0 ip=dhcp spinlock=tickless ro
+  root   (hd0,0)
+  kernel /vmlinuz26-ec2 root=/dev/xvda2 console=hvc0 ip=dhcp spinlock=tickless ro
 EOF
 
 ### Modified Files.
 # fix mkinitcpio
-cp ./mkinitcpio.conf ./newroot/etc/mkinitcpio.conf
+# cp ./mkinitcpio.conf ./newroot/etc/mkinitcpio.conf
 
 # secure sshd
 sed -e 's/#PasswordAuthentication yes/PasswordAuthentication no/' -i ./newroot/etc/ssh/sshd_config
@@ -102,11 +114,11 @@ sed -e 's/#UseDNS yes/UseDNS no/' -i ./newroot/etc/ssh/sshd_config
 # setup our fstab with uuid's.
 # TODO: make it work with the correct loop's, not just the first two.
 cat << EOF > ./newroot/etc/fstab
-$(blkid -c /dev/null -s UUID -o export /dev/loop0) /     auto    defaults,relatime 0 1
-$(blkid -c /dev/null -s UUID -o export /dev/loop1) /boot auto    defaults,noauto,relatime 0 0
-none      /proc proc    nodev,noexec,nosuid 0 0
-none /dev/pts devpts defaults 0 0
-none /dev/shm tmpfs nodev,nosuid 0 0
+$(blkid -c /dev/null -s UUID -o export $ROOTDEV2) /     auto    defaults,relatime 0 1
+$(blkid -c /dev/null -s UUID -o export $ROOTDEV1) /boot     auto    defaults,relatime 0 1
+none  /proc proc    nodev,noexec,nosuid 0 0
+none  /dev/pts devpts defaults 0 0
+none  /dev/shm tmpfs nodev,nosuid 0 0
 EOF
 
 # setup our resolv.conf
